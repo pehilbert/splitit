@@ -5,6 +5,7 @@ import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Groups from './pages/Groups'
 import ManageGroup from './pages/ManageGroup'
+import ManageExpense from './pages/ManageExpense'
 
 function App() {
     return (
@@ -14,6 +15,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/groups" element={<Groups />} />
                 <Route path="/groups/:groupId" element={<ManageGroup />} />
+                <Route path="/groups/:groupId/:expenseId" element={<ManageExpense />} />
             </Routes>
         </>
     )

@@ -10,6 +10,7 @@ export type Expense = {
     date: string // ISO format
     totalCost: number
     paidById: string
+    payerPortionAmount: number
     splitBetween: ExpenseSplit[]
 }
 

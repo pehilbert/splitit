@@ -16,6 +16,7 @@ export const exampleGroup: Group = {
       description: "Weekly grocery run at Safeway",
       totalCost: 90,
       paidById: "p1", // Alice paid
+      payerPortionAmount: 30,
       splitBetween: [
         {
           personId: "p2",
@@ -36,6 +37,7 @@ export const exampleGroup: Group = {
       description: "Late-night pizza delivery",
       totalCost: 60,
       paidById: "p3", // Charlie paid
+      payerPortionAmount: 20,
       splitBetween: [
         {
           personId: "p1",

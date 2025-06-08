@@ -1,5 +1,5 @@
 import { Breadcrumb, Button, Col, Container, ListGroup, Row } from "react-bootstrap"
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useGroups } from "../contexts/GroupContext";
 import type { Group } from "../types/model";
 
@@ -37,7 +37,12 @@ function ManageGroup() {
                         <ListGroup>
                             {group.expenses.map((expense, index) => (
                                 <ListGroup.Item  key={index}>
-                                    {expense.title}
+                                    <Link
+                                        to={`/groups/${group.id}/${expense.id}`}
+                                        style={{ textDecoration: 'none', color: 'inherit' }}
+                                    >
+                                        {expense.title}
+                                    </Link>
                                 </ListGroup.Item>
                             ))}
                         </ListGroup>
