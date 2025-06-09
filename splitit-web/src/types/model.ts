@@ -26,3 +26,23 @@ export type Group = {
     people: Person[]
     expenses: Expense[]
 }
+
+export function createEmptyExpense(): Expense {
+    return {
+        id: crypto.randomUUID(),
+        title: '',
+        description: '',
+        date: new Date().toISOString(),
+        totalCost: 0,
+        paidById: '',
+        payerPortionAmount: 0,
+        splitBetween: []
+    };
+}
+
+export function createEmptyPerson(): Person {
+    return {
+        id: crypto.randomUUID(),
+        name: ''
+    };
+}
