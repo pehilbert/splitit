@@ -52,12 +52,13 @@ function ManageGroup() {
     const handleAddExpense = () => {
         newExpense.splitBetween = newSplit;
         setNewExpense({...newExpense});
-        toastMessage(`Expense '${newExpense.title.trim()}' added to the group`);
         group?.expenses.push(newExpense);
+        updateGroup(group!);
 
         setNewExpense(createEmptyExpense());
         setNewSplit([]);
         setAddExpenseModal(false);
+        toastMessage(`Expense '${newExpense.title.trim()}' added to the group`);
     }
 
     const getPersonById = (id: string): Person => {
@@ -231,7 +232,7 @@ function ManageGroup() {
                                                 checked={mySplit ? true : false}
                                                 onChange={(e) => {
                                                     if (e.target.checked) {
-                                                        setNewSplit([...newSplit, {personId: person.id, amountOwed: 0, portionAmount: 0}])
+                                                        setNewSplit([...newSplit, {personId: person.id, amountOwed: 0, amountPaid: 0}])
                                                     } else {
                                                         setNewSplit(newSplit.filter((split) => split.personId != person.id))
                                                     }
@@ -246,13 +247,13 @@ function ManageGroup() {
                                                 step="0.01"
                                                 min="0"
                                                 readOnly={mySplit ? false : true}
-                                                value={mySplit?.portionAmount}
+                                                value={mySplit?.amountOwed}
                                                 onChange={(e) => {
                                                     console.log("changed")
                                                     if (mySplit) {
                                                         console.log(e.target.value)
+                                                        mySplit.amountPaid = 0;
                                                         mySplit.amountOwed = parseFloat(e.target.value);
-                                                        mySplit.portionAmount = parseFloat(e.target.value);
                                                         setNewSplit([...newSplit]);
                                                     }
                                                 }}

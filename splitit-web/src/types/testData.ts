@@ -20,12 +20,12 @@ export const exampleGroup: Group = {
       splitBetween: [
         {
           personId: "p2",
-          portionAmount: 30,
+          amountPaid: 0,
           amountOwed: 30
         },
         {
           personId: "p3",
-          portionAmount: 30,
+          amountPaid: 0,
           amountOwed: 30
         }
       ]
@@ -41,12 +41,12 @@ export const exampleGroup: Group = {
       splitBetween: [
         {
           personId: "p1",
-          portionAmount: 20,
+          amountPaid: 0,
           amountOwed: 20
         },
         {
           personId: "p2",
-          portionAmount: 20,
+          amountPaid: 0,
           amountOwed: 20
         }
       ]

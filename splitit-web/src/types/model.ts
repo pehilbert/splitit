@@ -16,7 +16,7 @@ export type Expense = {
 
 export type ExpenseSplit = {
     personId: string
-    portionAmount: number
+    amountPaid: number
     amountOwed: number
 }
 

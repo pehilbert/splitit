@@ -1,11 +1,15 @@
-import { Breadcrumb, Card, Col, Container, ListGroup, Row } from "react-bootstrap"
+import { Breadcrumb, Card, Col, Container, FormControl, ListGroup, ProgressBar, Row } from "react-bootstrap"
 import { useGroups } from "../contexts/GroupContext"
 import { useParams } from "react-router-dom"
-import type { Expense, Group, Person } from "../types/model"
+import { type Expense, type Group, type Person } from "../types/model"
+import { useState } from "react";
 
 function ManageExpense() {
+    const [currentlyEditingSplit, setCurrentlyEditingSplit] = useState<string>('');
+    const [currentlyEditingSplitAmount, setCurrentlyEditingSplitAmount] = useState<number>(0);
+
     const {groupId, expenseId} = useParams<{groupId: string, expenseId: string}>();
-    const {getGroupById} = useGroups();
+    const {getGroupById, updateGroup} = useGroups();
 
     const group: Group | undefined = getGroupById(groupId || "");
     const expense: Expense | undefined = group?.expenses.find((expense) => expense.id == expenseId);
@@ -14,6 +18,25 @@ function ManageExpense() {
         const person = group?.people.find((person) => person.id == personId);
 
         return person ? person : {id: "", name: ""};
+    }
+
+    function handleChangeEditingSplit(personId: string) {
+        const prevSplit = expense?.splitBetween.find(split => split.personId === currentlyEditingSplit);
+
+        if (prevSplit) {
+            prevSplit.amountPaid = Math.min(currentlyEditingSplitAmount, prevSplit.amountOwed);
+            updateGroup(group!);
+        }
+
+        const currentSplit = expense?.splitBetween.find(split => split.personId === personId);
+
+        if (currentSplit) {
+            setCurrentlyEditingSplit(personId);
+            setCurrentlyEditingSplitAmount(currentSplit.amountPaid);
+        } else {
+            setCurrentlyEditingSplit('');
+            setCurrentlyEditingSplitAmount(0);
+        }
     }
 
     return (
@@ -43,16 +66,46 @@ function ManageExpense() {
                             </Row>
                         </Card>
                     </Col>
-                    <Col className="p-2">
-                        <h5>Split</h5>
+                    <Col>
+                        <Container className="p-1 d-flex justify-content-between">
+                            <h5>Split</h5>
+                        </Container>
                         <ListGroup>
-                            <ListGroup.Item>{getPersonById(expense.paidById).name} paid | Portion: ${expense.payerPortionAmount.toFixed(2)}</ListGroup.Item>
+                            <ListGroup.Item className="d-flex justify-content-between p-2">
+                                <p>{getPersonById(expense.paidById).name}</p>
+                                <p>${expense.payerPortionAmount.toFixed(2)}</p>
+                            </ListGroup.Item>
                             {expense.splitBetween.map((split, index) => {
                                 const person = getPersonById(split.personId);
 
                                 return (
-                                    <ListGroup.Item key={index}>
-                                        {person.name}, owes ${split.amountOwed.toFixed(2)} | Portion: ${split.portionAmount.toFixed(2)}
+                                    <ListGroup.Item className="d-flex justify-content-between p-2" key={index}>
+                                        <p>{person.name}</p>
+                                        <div style={{width: '25%'}}>
+                                            {currentlyEditingSplit === split.personId ?
+                                            <>
+                                                <FormControl
+                                                    type="number"
+                                                    placeholder="$"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={currentlyEditingSplitAmount}
+                                                    onChange={(e) => setCurrentlyEditingSplitAmount(parseFloat(e.target.value))}
+                                                    onBlur={() => handleChangeEditingSplit('')}
+                                                />
+                                                / ${split.amountOwed.toFixed(2)}
+                                            </>
+                                            : 
+                                            <>
+                                                <p 
+                                                    style={{textAlign: 'right'}} 
+                                                    onClick={() => handleChangeEditingSplit(split.personId)}
+                                                >
+                                                    ${split.amountPaid.toFixed(2)} / ${split.amountOwed.toFixed(2)}
+                                                </p>
+                                                <ProgressBar className="" now={split.amountPaid / split.amountOwed * 100} variant="success"/>
+                                            </>}
+                                        </div>
                                     </ListGroup.Item>
                                 )
                             })}
