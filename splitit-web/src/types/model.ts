@@ -27,6 +27,15 @@ export type Group = {
     expenses: Expense[]
 }
 
+export function createEmptyGroup(): Group {
+    return {
+        id: crypto.randomUUID(),
+        name: "",
+        people: [],
+        expenses: []
+    }
+}
+
 export function createEmptyExpense(): Expense {
     return {
         id: crypto.randomUUID(),

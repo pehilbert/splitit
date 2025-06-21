@@ -1,12 +1,12 @@
-import { Breadcrumb, Button, Col, Container, Form, ListGroup, Modal, Row, Toast, ToastContainer } from "react-bootstrap"
+import { Breadcrumb, Button, Col, Container, DropdownButton, Form, ListGroup, Modal, Row, Toast, ToastContainer } from "react-bootstrap"
 import { Link, useParams } from "react-router-dom";
-import { useGroups } from "../contexts/GroupContext";
+import { useGroups } from "../context/GroupContext";
 import { createEmptyExpense, createEmptyPerson, type Expense, type ExpenseSplit, type Group, type Person } from "../types/model";
 import { useState } from "react";
 
 function ManageGroup() {
     const {groupId} = useParams<{groupId: string}>();
-    const {getGroupById, updateGroup} = useGroups();
+    const {getGroupById, addPerson, removePerson, addExpense} = useGroups();
     const group: Group | undefined = getGroupById(groupId || "");
 
     const [showAddPersonModal, setAddPersonModal] = useState<boolean>(false);
@@ -42,23 +42,32 @@ function ManageGroup() {
             return;
         }
 
-        group?.people.push({id: crypto.randomUUID(), name: newPersonName});
-        updateGroup(group!);
-        setAddPersonModal(false);
-        toastMessage(`${newPersonName.trim()} added to the group`);
+        if (group) {
+            addPerson(group.id, {id: crypto.randomUUID(), name: newPersonName});
+            toastMessage(`${newPersonName.trim()} added to the group`);
+        } else {
+            toastMessage("Something went wrong");
+        }
+
         setNewPersonName('');
+        setAddPersonModal(false);
     }
 
     const handleAddExpense = () => {
+        newExpense.id = crypto.randomUUID();
         newExpense.splitBetween = newSplit;
         setNewExpense({...newExpense});
-        group?.expenses.push(newExpense);
-        updateGroup(group!);
+
+        if (group) {
+            addExpense(group.id, newExpense);
+            toastMessage(`Expense '${newExpense.title.trim()}' added to the group`);
+        } else {
+            toastMessage("Something went wrong");
+        }
 
         setNewExpense(createEmptyExpense());
         setNewSplit([]);
         setAddExpenseModal(false);
-        toastMessage(`Expense '${newExpense.title.trim()}' added to the group`);
     }
 
     const getPersonById = (id: string): Person => {
@@ -70,6 +79,16 @@ function ManageGroup() {
         return newSplit.find((split) => split.personId == id);
     }
     
+    function handleRemovePerson(person: Person): void {
+        if (!group) {
+            toastMessage("Something went wrong");
+            return;
+        }
+
+        removePerson(group.id, person.id);
+        toastMessage(`${person.name} removed from the group`);
+    }
+
     return (
         <Container className="mt-3 ms-1">
             {group ? (
@@ -86,7 +105,22 @@ function ManageGroup() {
                         </Row>
                         <ListGroup>
                             {group.people.map((person, index) => (
-                                <ListGroup.Item key={index}>{person.name}</ListGroup.Item>
+                                <ListGroup.Item key={index}>
+                                    <Row className="justify-content-between align-items-center">
+                                        <Col>
+                                            {person.name}
+                                        </Col>
+                                        <Col>
+                                            <Button 
+                                                style={{float: 'right'}}
+                                                variant="warning"
+                                                onClick={() => handleRemovePerson(person)}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </Col>
+                                    </Row>
+                                </ListGroup.Item>
                             ))}
                         </ListGroup>
                     </Col>
@@ -200,8 +234,8 @@ function ManageGroup() {
                             onChange={(e) => setNewExpense({...newExpense, paidById: e.target.value, payerPortionAmount: newExpense.totalCost, splitBetween: []})}
                         >
                             <option value=''>Select...</option>
-                            {group?.people.map((person) => (
-                                <option value={person.id}>{person.name}</option>
+                            {group?.people.map((person, index) => (
+                                <option key={index} value={person.id}>{person.name}</option>
                             ))}
                         </Form.Select>
                     </Form.Group>
