@@ -3,6 +3,7 @@ import { useGroups } from "../context/GroupContext"
 import { useParams } from "react-router-dom"
 import { type Expense, type Group, type Person } from "../types/model"
 import { useState } from "react";
+import { getTotalPaid } from "../types/expenseUtility";
 
 function ManageExpense() {
     const [currentlyEditingSplit, setCurrentlyEditingSplit] = useState<string>('');
@@ -40,7 +41,7 @@ function ManageExpense() {
     }
 
     return (
-        <Container className="mt-3 ms-1">
+        <Container className="w-100 mt-3 ms-1">
             {group && expense ? (
             <>
                 <Breadcrumb>
@@ -50,23 +51,36 @@ function ManageExpense() {
                 </Breadcrumb>
                 <Row>
                     <Col className="p-2 w-25">
+                        <Container className="p-1 d-flex justify-content-between">
+                            <h5>Expense Summary</h5>
+                        </Container>
                         <Card className="p-2">
                             <Row className="justify-content-between">
-                                <Col xs="auto">
+                                <Col className="px-3" xs="auto">
                                     <h5>{expense.title}</h5>
                                     <p>{expense.description}</p>
                                 </Col>
-                                <Col xs="auto">
+                                <Col className="px-3" xs="auto">
                                     <h5>{new Date(expense.date).toLocaleDateString('en-US')}</h5>
                                 </Col>
                             </Row>
                             <Row>
-                                <p>${expense.totalCost.toFixed(2)}</p>
-                                <p>Paid by: {getPersonById(expense.paidById).name}</p>
+                                <Col className="px-3">
+                                    <p>Paid by: {getPersonById(expense.paidById).name}</p>
+                                </Col>
+                            </Row>
+                            <Row>
+                                <Col className="px-3">
+                                    <h5>${getTotalPaid(expense).toFixed(2)} / ${expense.totalCost.toFixed(2)}</h5>
+                                    <ProgressBar
+                                        now={getTotalPaid(expense) / expense.totalCost * 100}
+                                        variant={getTotalPaid(expense) === expense.totalCost ? 'success' : ''}
+                                    />
+                                </Col>
                             </Row>
                         </Card>
                     </Col>
-                    <Col>
+                    <Col className="p-2 w-25">
                         <Container className="p-1 d-flex justify-content-between">
                             <h5>Split</h5>
                         </Container>
@@ -103,7 +117,10 @@ function ManageExpense() {
                                                 >
                                                     ${split.amountPaid.toFixed(2)} / ${split.amountOwed.toFixed(2)}
                                                 </p>
-                                                <ProgressBar className="" now={split.amountPaid / split.amountOwed * 100} variant="success"/>
+                                                <ProgressBar 
+                                                    now={split.amountPaid / split.amountOwed * 100} 
+                                                    variant={split.amountPaid === split.amountOwed ? 'success' : ''}
+                                                />
                                             </>}
                                         </div>
                                     </ListGroup.Item>

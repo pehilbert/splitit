@@ -1,8 +1,10 @@
-import { Breadcrumb, Button, Col, Container, DropdownButton, Form, ListGroup, Modal, Row, Toast, ToastContainer } from "react-bootstrap"
+import { Breadcrumb, Button, Col, Container, Form, ListGroup, Modal, ProgressBar, Row, Toast, ToastContainer } from "react-bootstrap"
+import 'react-circular-progressbar/dist/styles.css';
 import { Link, useParams } from "react-router-dom";
 import { useGroups } from "../context/GroupContext";
 import { createEmptyExpense, createEmptyPerson, type Expense, type ExpenseSplit, type Group, type Person } from "../types/model";
 import { useState } from "react";
+import { getTotalPaid } from "../types/expenseUtility";
 
 function ManageGroup() {
     const {groupId} = useParams<{groupId: string}>();
@@ -123,7 +125,7 @@ function ManageGroup() {
                                         <Col>
                                             <Button 
                                                 style={{float: 'right'}}
-                                                variant="warning"
+                                                variant="outline-danger"
                                                 onClick={() => handleRemovePerson(person)}
                                             >
                                                 Remove
@@ -148,13 +150,18 @@ function ManageGroup() {
                                                 to={`/groups/${group.id}/${expense.id}`}
                                                 style={{ textDecoration: 'none', color: 'inherit' }}
                                             >
-                                                {expense.title}
+                                                {expense.title} - ${getTotalPaid(expense).toFixed(2)} / ${expense.totalCost.toFixed(2)}
                                             </Link>
+                                            <ProgressBar
+                                                className="mt-2"
+                                                now={getTotalPaid(expense) / expense.totalCost * 100}
+                                                variant={getTotalPaid(expense) === expense.totalCost ? 'success' : ''}
+                                            />
                                         </Col>
                                         <Col>
                                             <Button 
                                                 style={{float: 'right'}}
-                                                variant="warning"
+                                                variant="outline-danger"
                                                 onClick={() => handleRemoveExpense(expense)}
                                             >
                                                 Remove
