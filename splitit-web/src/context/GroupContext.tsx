@@ -167,7 +167,7 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const group = getGroupById(groupId);
         
         if (group) {
-            group.expenses = group.expenses.filter(e => (e.id !== expenseId ? expenseId : e));
+            group.expenses = group.expenses.filter(e => e.id !== expenseId);
             updateGroup(group);
             console.log("Removed expense", expenseId, "from group", group.id, group.name);
         } else {

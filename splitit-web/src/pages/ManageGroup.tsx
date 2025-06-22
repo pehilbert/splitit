@@ -6,7 +6,7 @@ import { useState } from "react";
 
 function ManageGroup() {
     const {groupId} = useParams<{groupId: string}>();
-    const {getGroupById, addPerson, removePerson, addExpense} = useGroups();
+    const {getGroupById, addPerson, removePerson, addExpense, removeExpense} = useGroups();
     const group: Group | undefined = getGroupById(groupId || "");
 
     const [showAddPersonModal, setAddPersonModal] = useState<boolean>(false);
@@ -89,6 +89,16 @@ function ManageGroup() {
         toastMessage(`${person.name} removed from the group`);
     }
 
+    function handleRemoveExpense(expense: Expense): void {
+        if (!group) {
+            toastMessage("Something went wrong");
+            return;
+        }
+
+        removeExpense(group.id, expense.id);
+        toastMessage(`Removed expense '${expense.title}'`);
+    }
+
     return (
         <Container className="mt-3 ms-1">
             {group ? (
@@ -132,12 +142,25 @@ function ManageGroup() {
                         <ListGroup>
                             {group.expenses.map((expense, index) => (
                                 <ListGroup.Item  key={index}>
-                                    <Link
-                                        to={`/groups/${group.id}/${expense.id}`}
-                                        style={{ textDecoration: 'none', color: 'inherit' }}
-                                    >
-                                        {expense.title}
-                                    </Link>
+                                    <Row className="justify-content-between align-items-center">
+                                        <Col>
+                                            <Link
+                                                to={`/groups/${group.id}/${expense.id}`}
+                                                style={{ textDecoration: 'none', color: 'inherit' }}
+                                            >
+                                                {expense.title}
+                                            </Link>
+                                        </Col>
+                                        <Col>
+                                            <Button 
+                                                style={{float: 'right'}}
+                                                variant="warning"
+                                                onClick={() => handleRemoveExpense(expense)}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </Col>
+                                    </Row>
                                 </ListGroup.Item>
                             ))}
                         </ListGroup>
