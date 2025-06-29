@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createEmptyPerson, type Expense, type Group, type Person } from '../types/model';
+import { type Expense, type Group, type Person } from '../types/model';
 // import { exampleGroup } from '../types/testData';
 
 // Define the shape of your context
@@ -184,7 +184,7 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 };
 
-export const useGroups = (): GroupContextType => {
+export function useGroups(): GroupContextType {
     const ctx = useContext(GroupContext);
     if (!ctx) throw new Error("useGroups must be used within a GroupProvider");
     return ctx;

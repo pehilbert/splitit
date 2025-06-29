@@ -6,7 +6,7 @@ function GroupListItem({ group } : {group: Group}) {
     const peopleString: string = group.people.map((person => person.name)).join(", ");
 
     return (
-        <Card className="p-2">
+        <Card className="mb-2 p-2">
             <Card.Title>
                 <Link
                     to={`/groups/${group.id}`}
