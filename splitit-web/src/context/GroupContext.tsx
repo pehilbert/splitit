@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { type Expense, type Group, type Person } from '../types/model';
 // import { exampleGroup } from '../types/testData';
 
 // Define the shape of your context
-interface GroupContextType {
+export interface GroupContextType {
     groups: Group[];
 
     getGroupById: (id: string) => Group | undefined;
@@ -23,7 +23,7 @@ interface GroupContextType {
 }
 
 // Default values (optional fallback)
-const GroupContext = createContext<GroupContextType | undefined>(undefined);
+export const GroupContext = createContext<GroupContextType | undefined>(undefined);
 
 // Helpers
 function loadGroups(): Group[] {
@@ -182,10 +182,4 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             {children}
         </GroupContext.Provider>
     );
-};
-
-export function useGroups(): GroupContextType {
-    const ctx = useContext(GroupContext);
-    if (!ctx) throw new Error("useGroups must be used within a GroupProvider");
-    return ctx;
 };
