@@ -1,29 +1,6 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { type Expense, type Group, type Person } from '../types/model';
-// import { exampleGroup } from '../types/testData';
-
-// Define the shape of your context
-export interface GroupContextType {
-    groups: Group[];
-
-    getGroupById: (id: string) => Group | undefined;
-    addGroup: (group: Group) => void;
-    updateGroup: (group: Group) => void;
-    removeGroup: (id: string) => void;
-
-    getPersonById: (groupId: string, personId: string) => Person | undefined;
-    addPerson: (groupId: string, person: Person) => void;
-    updatePerson: (groupId: string, newPerson: Person) => void;
-    removePerson: (groupId: string, personId: string) => void;
-
-    getExpenseById: (groupId: string, expenseId: string) => Expense | undefined;
-    addExpense: (groupId: string, expense: Expense) => void;
-    updateExpense: (groupId: string, newExpense: Expense) => void;
-    removeExpense: (groupId: string, expenseId: string) => void;
-}
-
-// Default values (optional fallback)
-export const GroupContext = createContext<GroupContextType | undefined>(undefined);
+import { GroupContext } from './contexts';
 
 // Helpers
 function loadGroups(): Group[] {

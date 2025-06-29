@@ -1,6 +1,6 @@
 import { Breadcrumb, Button, Container, Form, ListGroup, Modal } from "react-bootstrap";
 import GroupListItem from "../components/GroupListItem";
-import { useGroups } from '../context/ContextHooks';
+import { useGroups } from '../context/contexts';
 import { useState } from "react";
 import { createEmptyGroup, type Group } from "../types/model";
 
