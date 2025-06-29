@@ -1,11 +1,13 @@
 import { Breadcrumb, Button, Container, Form, ListGroup, Modal } from "react-bootstrap";
 import GroupListItem from "../components/GroupListItem";
-import { useGroups } from '../context/contexts';
+import { useGroups, useUserContext } from '../context/Contexts';
 import { useState } from "react";
 import { createEmptyGroup, type Group } from "../types/model";
 
 function Groups() {
     const { groups, addGroup } = useGroups();
+    const { currentUser } = useUserContext();
+
     const [showAddGroupModal, setShowAddGroupModal] = useState<boolean>(false);
     const [newGroup, setNewGroup] = useState<Group>(createEmptyGroup());
     const [inputError, setInputError] = useState<string | null>(null);
@@ -27,9 +29,23 @@ function Groups() {
             return;
         }
 
+        if (currentUser) {
+            newGroup.people.push(currentUser);
+            setNewGroup(createEmptyGroup());
+            addGroup(newGroup);
+        } else {
+            return;
+        }
+
         setShowAddGroupModal(false);
-        setNewGroup(createEmptyGroup());
-        addGroup(newGroup);
+    }
+
+    if (!currentUser) {
+        return (
+            <Container className="mt-3 ms-1">
+                <h1>You must be signed in</h1>
+            </Container>
+        )
     }
 
     return (

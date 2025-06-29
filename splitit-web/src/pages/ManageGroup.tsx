@@ -1,7 +1,7 @@
 import { Breadcrumb, Button, Col, Container, Form, ListGroup, Modal, ProgressBar, Row, Toast, ToastContainer } from "react-bootstrap"
 import 'react-circular-progressbar/dist/styles.css';
 import { Link, useParams } from "react-router-dom";
-import { useGroups } from '../context/contexts';
+import { useGroups } from '../context/Contexts';
 import { createEmptyExpense, createEmptyPerson, type Expense, type ExpenseSplit, type Group, type Person } from "../types/model";
 import { useState } from "react";
 import { getTotalPaid } from "../types/expenseUtility";

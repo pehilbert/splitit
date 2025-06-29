@@ -1,5 +1,5 @@
 import { Breadcrumb, Card, Col, Container, FormControl, ListGroup, ProgressBar, Row } from "react-bootstrap"
-import { useGroups } from '../context/contexts';
+import { useGroups } from '../context/Contexts';
 import { useParams } from "react-router-dom"
 import { type Expense, type Group, type Person } from "../types/model"
 import { useState } from "react";

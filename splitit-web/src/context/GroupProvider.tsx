@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { type Expense, type Group, type Person } from '../types/model';
-import { GroupContext } from './contexts';
+import { GroupContext } from './Contexts';
 
 // Helpers
 function loadGroups(): Group[] {
