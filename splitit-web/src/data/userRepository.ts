@@ -56,9 +56,21 @@ const axiosInstance = axios.create({
     baseURL: API_BASE_URL
 });
 
-export async function getUserById(id: string): Promise<CreateUserResponse> {
+export async function getUserById(id: string): Promise<GetUsersResponse> {
     try {
-        const response = await axiosInstance.get<CreateUserResponse>(`/users/?user_id=${id}`);
+        const response = await axiosInstance.get<GetUsersResponse>(`/users/?user_id=${id}`);
+        return response.data;
+    } catch (error: unknown) {
+        if (error instanceof AxiosError) {
+            return error.response?.data ?? { message: "Something went wrong." };
+        }
+        return { message: "Something went wrong." };
+    }
+}
+
+export async function searchByUsername(username: string, limit: number = 5): Promise<GetUsersResponse> {
+    try {
+        const response = await axiosInstance.get<GetUsersResponse>(`/users/?username=${username}&?limit=${limit}`);
         return response.data;
     } catch (error: unknown) {
         if (error instanceof AxiosError) {

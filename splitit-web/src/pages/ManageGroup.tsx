@@ -2,12 +2,13 @@ import { Breadcrumb, Button, Col, Container, Form, ListGroup, Modal, ProgressBar
 import 'react-circular-progressbar/dist/styles.css';
 import { Link, useParams } from "react-router-dom";
 import { type Expense, type ExpenseSplit, type Group, type User } from "../types/model";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getTotalPaid } from "../types/expenseUtility";
 import { createEmptyExpense, createEmptyUser } from "../types/util";
-import { getGroupById } from "../data/groupRepository";
-import { groupJsonToGroup } from "../data/mapping";
+import { addGroupMember, getGroupById, removeGroupMember } from "../data/groupRepository";
+import { groupJsonToGroup, userJsonToUser } from "../data/mapping";
 import { useAuth } from "../context/Contexts";
+import { searchByUsername } from "../data/userRepository";
 
 function ManageGroup() {
     const {token, currentUser} = useAuth();
@@ -16,7 +17,9 @@ function ManageGroup() {
     const [loadingError, setLoadingError] = useState<string>();
 
     const [showAddPersonModal, setAddPersonModal] = useState<boolean>(false);
-    const [newPersonName, setNewPersonName] = useState<string>('');
+    const [searchUsername, setSearchUsername] = useState<string>('');
+    const [userSearchResults, setUserSearchResults] = useState<User[] | null>([]);
+    const [newGroupMember, setNewGroupMember] = useState<User>();
 
     const [showAddExpenseModal, setAddExpenseModal] = useState<boolean>(false);
     const [newExpense, setNewExpense] = useState<Expense>(createEmptyExpense());
@@ -26,7 +29,9 @@ function ManageGroup() {
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastText, setToastText] = useState<string>('');
 
-    useEffect(() => {
+    const SEARCH_DEBOUNCE = 400;
+
+    const updateGroup = useCallback(async () => {
         if (!groupId) {
             setLoadingError("Something went wrong loading this group");
             return;
@@ -38,44 +43,79 @@ function ManageGroup() {
         }
 
         getGroupById(groupId)
-            .then(response => {
-                if (response.groups && response.groups.length > 0) {
-                    setGroup(groupJsonToGroup(response.groups[0]));
-                }
-            })
-    }, [groupId, currentUser, token])
+        .then(response => {
+            if (response.groups && response.groups.length > 0) {
+                setGroup(groupJsonToGroup(response.groups[0]));
+            }
+        });
+    }, [groupId, token, currentUser]);
+
+    useEffect(() => {
+        updateGroup()
+    }, [groupId, currentUser, token, showAddPersonModal, updateGroup])
+
+    useEffect(() => {
+        const trimmedSearchTerm = searchUsername.trim();
+
+        if (!trimmedSearchTerm) {
+            return;
+        }
+
+        const handler = setTimeout(() => {
+            searchByUsername(trimmedSearchTerm)
+                .then(response => {
+                    console.log("response.users =", response.users);
+                    if (response.users !== undefined) {
+                        let userResults = response.users.map(json => userJsonToUser(json));
+                        if (newGroupMember && !userResults.some(user => user.id === newGroupMember.id)) {
+                            userResults = [newGroupMember, ...userResults];
+                        }
+
+                        setUserSearchResults(userResults);
+                    } else {
+                        console.log("In empty branch")
+                        setUserSearchResults([]);
+                    }
+                })
+                .catch(error => console.error("Error searching for users", error));
+        }, SEARCH_DEBOUNCE);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchUsername, newGroupMember])
 
     const toastMessage = (message: string) => {
         setToastText(message);
         setShowToast(true);
     }
 
-    const handleAddPerson = () => {
-        const trimmedName = newPersonName.trim();
-
-        if (trimmedName === '') {
-            setInputError("Name cannot be empty");
+    const handleAddPerson = async () => {
+        if (!token) {
+            setInputError("Please sign in");
             return;
         }
 
-        const nameExists = group?.members.some(
-            (person) => person.username.trim().toLowerCase() === trimmedName.toLowerCase()
-        )
-
-        if (nameExists) {
-            setInputError("That person is already in this group");
+        if (!newGroupMember) {
+            setInputError("Please select a user to add to the group");
             return;
         }
 
-        if (group) {
-            // TODO: call API and add person to group
-            toastMessage(`${newPersonName.trim()} added to the group`);
-        } else {
-            toastMessage("Something went wrong");
+        if (!group) {
+            setInputError("Something went wrong");
+            return;
         }
 
-        setNewPersonName('');
+        const response = await addGroupMember(group.id, { user_id: parseInt(newGroupMember.id) }, token);
+
+        if (response.message) {
+            toastMessage(response.message);
+        }
+
         setAddPersonModal(false);
+        setNewGroupMember(undefined);
+        setSearchUsername('');
+        setUserSearchResults([]);
     }
 
     const handleAddExpense = () => {
@@ -104,14 +144,24 @@ function ManageGroup() {
         return newSplit.find((split) => split.user.id == id);
     }
     
-    function handleRemovePerson(user: User): void {
+    async function handleRemovePerson(user: User) {
         if (!group) {
             toastMessage("Something went wrong");
             return;
         }
 
-        // TODO: call API to remove person from group
-        toastMessage(`${user.username} removed from the group`);
+        if (!token) {
+            toastMessage("Please sign in");
+            return;
+        }
+
+        const response = await removeGroupMember(group.id, { user_id: parseInt(user.id) }, token);
+
+        if (response.message) {
+            toastMessage(response.message);
+        }
+
+        updateGroup();
     }
 
     function handleRemoveExpense(expense: Expense): void {
@@ -220,9 +270,9 @@ function ManageGroup() {
                         <Form.Control
                             type="text"
                             placeholder="Person's name"
-                            value={newPersonName}
+                            value={searchUsername}
                             onChange={(e) => {
-                                setNewPersonName(e.target.value);
+                                setSearchUsername(e.target.value);
                                 setInputError(null);
                             }}
                             isInvalid={!!inputError}
@@ -230,6 +280,21 @@ function ManageGroup() {
                         <Form.Control.Feedback type="invalid">
                             {inputError}
                         </Form.Control.Feedback>
+                        <Container>
+                            {userSearchResults && userSearchResults.length > 0 ? 
+                            userSearchResults.map((user, index) => (
+                                <Button className="mt-1" key={index} 
+                                    variant={newGroupMember?.id === user.id ? "primary" : "outline-primary"}
+                                    onClick={() => {
+                                        setNewGroupMember(user);
+                                        setSearchUsername(user.username);
+                                    }}
+                                >
+                                    {user.firstName} {user.lastName} | @{user.username}
+                                </Button>
+                            )) :
+                            <p className="mt-1">No users found.</p>}
+                        </Container>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
@@ -316,7 +381,6 @@ function ManageGroup() {
                             </Row>
                             {group?.members.map((user) => {
                                 const mySplit = getSplitByUserId(user.id);
-                                console.log("mySplit =", mySplit);
                                 return (
                                     user.id != newExpense.paidBy.id ? (
                                     <Row className="align-items-center mt-2">
