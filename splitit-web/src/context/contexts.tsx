@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { Expense, Group, Person } from "../types/model";
+import type { Expense, Group, User } from "../types/model";
 
 // Contexts
 export const GroupContext = createContext<GroupContextType | undefined>(undefined);
@@ -20,9 +20,9 @@ export function useGroups(): GroupContextType {
 
 // Context interfaces
 export interface UserContextType {
-    currentUser: Person | undefined;
+    currentUser: User | undefined;
 
-    updateCurrentUser: (newUser: Person | undefined) => void;
+    updateCurrentUser: (newUser: User | undefined) => void;
 }
 
 export interface GroupContextType {
@@ -33,9 +33,9 @@ export interface GroupContextType {
     updateGroup: (group: Group) => void;
     removeGroup: (id: string) => void;
 
-    getPersonById: (groupId: string, personId: string) => Person | undefined;
-    addPerson: (groupId: string, person: Person) => void;
-    updatePerson: (groupId: string, newPerson: Person) => void;
+    getPersonById: (groupId: string, personId: string) => User | undefined;
+    addPerson: (groupId: string, person: User) => void;
+    updatePerson: (groupId: string, newPerson: User) => void;
     removePerson: (groupId: string, personId: string) => void;
 
     getExpenseById: (groupId: string, expenseId: string) => Expense | undefined;

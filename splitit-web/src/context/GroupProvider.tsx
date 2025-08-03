@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { type Expense, type Group, type Person } from '../types/model';
+import { type Expense, type Group, type User } from '../types/model';
 import { GroupContext } from './Contexts';
 
 // Helpers
@@ -67,7 +67,7 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.log("Person", personId, "not found in group", groupId);
     }
 
-    const addPerson = (groupId: string, person: Person) => {
+    const addPerson = (groupId: string, person: User) => {
         const group = getGroupById(groupId);
 
         if (group) {
@@ -79,7 +79,7 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }
 
-    const updatePerson = (groupId: string, newPerson: Person) => {
+    const updatePerson = (groupId: string, newPerson: User) => {
         const group = getGroupById(groupId);
         
         if (group) {

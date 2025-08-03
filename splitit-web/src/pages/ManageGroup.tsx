@@ -2,7 +2,7 @@ import { Breadcrumb, Button, Col, Container, Form, ListGroup, Modal, ProgressBar
 import 'react-circular-progressbar/dist/styles.css';
 import { Link, useParams } from "react-router-dom";
 import { useGroups } from '../context/Contexts';
-import { createEmptyExpense, createEmptyPerson, type Expense, type ExpenseSplit, type Group, type Person } from "../types/model";
+import { createEmptyExpense, createEmptyPerson, type Expense, type ExpenseSplit, type Group, type User } from "../types/model";
 import { useState } from "react";
 import { getTotalPaid } from "../types/expenseUtility";
 
@@ -72,7 +72,7 @@ function ManageGroup() {
         setAddExpenseModal(false);
     }
 
-    const getPersonById = (id: string): Person => {
+    const getPersonById = (id: string): User => {
         const result = group?.people.find((person) => person.id == id);
         return result ? result : createEmptyPerson();
     }
@@ -81,7 +81,7 @@ function ManageGroup() {
         return newSplit.find((split) => split.personId == id);
     }
     
-    function handleRemovePerson(person: Person): void {
+    function handleRemovePerson(person: User): void {
         if (!group) {
             toastMessage("Something went wrong");
             return;

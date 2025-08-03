@@ -1,57 +1,30 @@
-export type Person = {
+export type User = {
+    id: string
+    username: string
+    firstName: string
+    lastName: string
+}
+
+export type Group = {
     id: string
     name: string
+    owner: User
+    members: User[]
+    expenses: Expense[]
 }
 
 export type Expense = {
     id: string
     title: string
     description: string
-    date: string // ISO format
+    date: Date
     totalCost: number
-    paidById: string
-    payerPortionAmount: number
-    splitBetween: ExpenseSplit[]
+    paidBy: User
+    splits: ExpenseSplit[]
 }
 
 export type ExpenseSplit = {
-    personId: string
-    amountPaid: number
+    user: User,
+    amountPaid: number,
     amountOwed: number
-}
-
-export type Group = {
-    id: string
-    name: string
-    people: Person[]
-    expenses: Expense[]
-}
-
-export function createEmptyGroup(): Group {
-    return {
-        id: crypto.randomUUID(),
-        name: "",
-        people: [],
-        expenses: []
-    }
-}
-
-export function createEmptyExpense(): Expense {
-    return {
-        id: crypto.randomUUID(),
-        title: '',
-        description: '',
-        date: new Date().toISOString(),
-        totalCost: 0,
-        paidById: '',
-        payerPortionAmount: 0,
-        splitBetween: []
-    };
-}
-
-export function createEmptyPerson(): Person {
-    return {
-        id: crypto.randomUUID(),
-        name: ''
-    };
 }

@@ -1,7 +1,7 @@
 import { Breadcrumb, Card, Col, Container, FormControl, ListGroup, ProgressBar, Row } from "react-bootstrap"
 import { useGroups } from '../context/Contexts';
 import { useParams } from "react-router-dom"
-import { type Expense, type Group, type Person } from "../types/model"
+import { type Expense, type Group, type User } from "../types/model"
 import { useState } from "react";
 import { getTotalPaid } from "../types/expenseUtility";
 
@@ -15,7 +15,7 @@ function ManageExpense() {
     const group: Group | undefined = getGroupById(groupId || "");
     const expense: Expense | undefined = group?.expenses.find((expense) => expense.id == expenseId);
 
-    function getPersonById(personId: string): Person {
+    function getPersonById(personId: string): User {
         const person = group?.people.find((person) => person.id == personId);
 
         return person ? person : {id: "", name: ""};
