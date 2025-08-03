@@ -2,13 +2,13 @@ import { createContext, useContext } from "react";
 import type { Expense, Group, User } from "../types/model";
 
 // Contexts
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const GroupContext = createContext<GroupContextType | undefined>(undefined);
-export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Hooks
-export function useUserContext(): UserContextType {
-    const ctx = useContext(UserContext);
-    if (!ctx) throw new Error("useGroups must be used within a GroupProvider");
+export function useAuth(): AuthContextType {
+    const ctx = useContext(AuthContext);
+    if (!ctx) throw new Error("useAuth must be used within a AuthProvider");
     return ctx;
 }
 
@@ -19,10 +19,12 @@ export function useGroups(): GroupContextType {
 }
 
 // Context interfaces
-export interface UserContextType {
+export interface AuthContextType {
     currentUser: User | undefined;
+    token: string | undefined;
 
-    updateCurrentUser: (newUser: User | undefined) => void;
+    authenticate: (username: string, password: string) => void;
+    logOut: () => void;
 }
 
 export interface GroupContextType {

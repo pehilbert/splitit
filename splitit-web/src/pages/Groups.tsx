@@ -1,15 +1,16 @@
 import { Breadcrumb, Button, Container, Form, ListGroup, Modal } from "react-bootstrap";
 import GroupListItem from "../components/GroupListItem";
-import { useGroups, useUserContext } from '../context/Contexts';
+import { useGroups, useAuth } from '../context/Contexts';
 import { useState } from "react";
-import { createEmptyGroup, type Group } from "../types/model";
+import { type Group } from "../types/model";
 
 function Groups() {
+    /*
     const { groups, addGroup } = useGroups();
-    const { currentUser } = useUserContext();
+    const { currentUser } = useAuth();
 
     const [showAddGroupModal, setShowAddGroupModal] = useState<boolean>(false);
-    const [newGroup, setNewGroup] = useState<Group>(createEmptyGroup());
+    const [newGroup, setNewGroup] = useState<Group>();
     const [inputError, setInputError] = useState<string | null>(null);
     
     function handleAddGroup() {
@@ -60,7 +61,7 @@ function Groups() {
             </ListGroup>
             <Button className='mt-2' onClick={() => setShowAddGroupModal(true)}>Add Group</Button>
 
-            {/* Add Group Modal */}
+            {/* Add Group Modal *//*}
             
             <Modal 
                 show={showAddGroupModal} 
@@ -92,6 +93,8 @@ function Groups() {
             </Modal>
         </Container>
     )
+    */
+   return (<></>);
 }
 
 export default Groups

@@ -2,11 +2,12 @@ import { Breadcrumb, Button, Col, Container, Form, ListGroup, Modal, ProgressBar
 import 'react-circular-progressbar/dist/styles.css';
 import { Link, useParams } from "react-router-dom";
 import { useGroups } from '../context/Contexts';
-import { createEmptyExpense, createEmptyPerson, type Expense, type ExpenseSplit, type Group, type User } from "../types/model";
+import { type Expense, type ExpenseSplit, type Group, type User } from "../types/model";
 import { useState } from "react";
 import { getTotalPaid } from "../types/expenseUtility";
 
 function ManageGroup() {
+    /*
     const {groupId} = useParams<{groupId: string}>();
     const {getGroupById, addPerson, removePerson, addExpense, removeExpense} = useGroups();
     const group: Group | undefined = getGroupById(groupId || "");
@@ -176,7 +177,7 @@ function ManageGroup() {
             </>
             ) : <h1>Group not found</h1>}
 
-            {/* Add Person modal */}
+            {/* Add Person modal *//*}
             <Modal 
                 show={showAddPersonModal} 
                 onHide={() => setAddPersonModal(false)}
@@ -209,7 +210,7 @@ function ManageGroup() {
                 </Modal.Footer>
             </Modal>
 
-            {/* Add Expense modal */}
+            {/* Add Expense modal *//*}
             <Modal 
                 show={showAddExpenseModal} 
                 onHide={() => setAddExpenseModal(false)}
@@ -335,7 +336,7 @@ function ManageGroup() {
                 </Modal.Footer>
             </Modal>
 
-            {/* Toast messages */}
+            {/* Toast messages *//*}
             <ToastContainer className="p-1 m-1" position="bottom-start" style={{zIndex: 1}}>
                 <Toast show={showToast} onClose={() => setShowToast(false)}>
                     <Toast.Header className="ps-0" closeButton/>
@@ -344,6 +345,8 @@ function ManageGroup() {
             </ToastContainer>
         </Container>
     )
+    */
+   return (<></>);
 }
 
 export default ManageGroup

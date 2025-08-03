@@ -1,43 +1,66 @@
 import { useState } from "react";
 import { Button, Container, Form } from "react-bootstrap";
-import { useUserContext } from "../context/Contexts";
-import { createEmptyPerson } from "../types/model";
+import { useAuth } from "../context/Contexts";
+import { useNavigate } from "react-router-dom";
 
 function SignIn() {
-    const {currentUser, updateCurrentUser} = useUserContext();
-    const [name, setName] = useState<string | undefined>(currentUser?.name);
+    const {authenticate} = useAuth();
+    const [username, setUsername] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [error, setError] = useState<string>('');
+    const [validated, setValidated] = useState<boolean>(false);
+    const navigate = useNavigate();
+    
+    const handleSignIn = async () => {
+        const trimmedUsername = username.trim();
+        const trimmedPassword = password.trim();
+        if (!trimmedUsername || !trimmedPassword) {
+            setError("Username and password cannot be blank.");
+            setValidated(true);
+            return;
+        }
 
-    function handleUpdateUser() {
-        if (name && name.trim().length !== 0) {
-            const trimmedName = name.trim();
-            console.log("Updating current user:", trimmedName);
+        setError("");
+        setValidated(false);
 
-            if (currentUser) {
-                updateCurrentUser({...currentUser, name: trimmedName})
-            } else {
-                const newPerson = createEmptyPerson();
-                newPerson.name = trimmedName;
-                updateCurrentUser(newPerson);
-            }
+        try {
+            await authenticate(trimmedUsername, trimmedPassword);
+            navigate("/");
+        } catch (error) {
+            setError(error as string);
         }
     }
-    
+
     return (
         <Container className="w-25 mx-auto mt-5">
-            <h3 style={{textAlign: 'center'}}>Sign In</h3>
-            <Form.Label className="mt-3">Name</Form.Label>
-            <Form.Control
-                placeholder="What's your name?"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-            />
-            <Button 
-                variant="dark" 
-                className="w-75 mt-3 d-block mx-auto"
-                onClick={handleUpdateUser}
-            >
-                Update User
-            </Button>
+            <h3 style={{textAlign: 'center'}}>Sign In To Your Account</h3>
+            <Form noValidate>
+                <Form.Control
+                    className="w-75 mt-4 mx-auto"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    isInvalid={validated && !username.trim()}
+                />
+                <Form.Control
+                    className="w-75 mt-2 mx-auto"
+                    placeholder="Password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    isInvalid={validated && !password.trim()}
+                />
+                {error && (
+                    <div className="text-danger text-center mt-2">{error}</div>
+                )}
+                <Button 
+                    variant="dark" 
+                    className="w-50 mt-3 d-block mx-auto"
+                    onClick={handleSignIn}
+                >
+                    Sign In
+                </Button>
+            </Form>
         </Container>
     )
 }

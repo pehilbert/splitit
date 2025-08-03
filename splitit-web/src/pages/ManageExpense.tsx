@@ -6,6 +6,7 @@ import { useState } from "react";
 import { getTotalPaid } from "../types/expenseUtility";
 
 function ManageExpense() {
+    /*
     const [currentlyEditingSplit, setCurrentlyEditingSplit] = useState<string>('');
     const [currentlyEditingSplitAmount, setCurrentlyEditingSplitAmount] = useState<number>(0);
 
@@ -133,6 +134,8 @@ function ManageExpense() {
             ) : <h1>Expense not found</h1>}
         </Container>
     )
+        */
+    return (<></>);
 }
 
 export default ManageExpense

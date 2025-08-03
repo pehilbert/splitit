@@ -49,6 +49,7 @@ export type AuthenticationResponse = {
     message?: string
     error?: string
     access_token?: string
+    user?: UserJson
 }
 
 const axiosInstance = axios.create({

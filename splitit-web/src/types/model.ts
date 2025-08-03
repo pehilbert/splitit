@@ -19,6 +19,7 @@ export type Expense = {
     description: string
     date: Date
     totalCost: number
+    payerPortion: number
     paidBy: User
     splits: ExpenseSplit[]
 }
