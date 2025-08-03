@@ -87,7 +87,7 @@ export async function updateUser(id: string, request: UpdateUserRequest, token: 
     try {
         const response = await axiosInstance.put<UpdateUserResponse>(
             `/users/?user_id=${id}`,
-            request as object,
+            request,
             {
                 headers: {
                     "Content-Type": "application/json",
