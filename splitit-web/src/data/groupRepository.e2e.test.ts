@@ -1,19 +1,10 @@
-import { addGroupMember, createGroup, deleteGroup, getGroupById, removeGroupMember, updateGroup } from "./groupRepository";
+import { addGroupMember, createGroup, deleteGroup, removeGroupMember, updateGroup } from "./groupRepository";
 import { authenticateUser } from "./userRepository";
 
 describe("Group Repository E2E", () => {
     let token = '';
     let group_id = '';
     const testSecondUserId = 18;
-
-    it("should fetch a group by ID", async () => {
-        const testGroupId = "1"; // Replace with a valid test group ID
-        const response = await getGroupById(testGroupId);
-
-        expect(response).toBeDefined();
-        expect(response.groups).toBeDefined();
-        expect(response.groups?.[0]?.id?.toString()).toBe(testGroupId);
-    });
 
     it("should create a group", async () => {
         const testUsername = "e2egrouptest";

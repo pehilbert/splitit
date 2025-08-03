@@ -1,11 +1,25 @@
 import { Button, Card, Col, Row } from "react-bootstrap"
 import type { Group } from "../types/model"
 import { Link } from "react-router-dom";
-import { useGroups } from "../context/Contexts";
+import { deleteGroup } from "../data/groupRepository";
+import { useAuth } from "../context/Contexts";
 
-function GroupListItem({ group } : {group: Group}) {
-    const peopleString: string = group.people.map((person => person.name)).join(", ");
-    const {removeGroup} = useGroups();
+function GroupListItem({ group, updateGroupsCallback } : {group: Group, updateGroupsCallback: () => void}) {
+    const {token} = useAuth();
+    const peopleString: string = group.members.map((user => user.firstName)).join(", ");
+    const deleteThisGroup = async () => {
+        if (!token) {
+            return;
+        }
+
+        const response = await deleteGroup(group.id, token);
+
+        if (response.error) {
+            console.error("Failed to delete group", response);
+        } else {
+            updateGroupsCallback();
+        }
+    }
 
     return (
         <Card className="mb-2 p-2">
@@ -25,7 +39,7 @@ function GroupListItem({ group } : {group: Group}) {
                     <Button 
                         style={{float: 'right'}} 
                         variant="outline-danger"
-                        onClick={() => removeGroup(group.id)}
+                        onClick={deleteThisGroup}
                     >
                         Delete
                     </Button>

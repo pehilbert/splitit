@@ -1,16 +1,19 @@
 import { Breadcrumb, Button, Col, Container, Form, ListGroup, Modal, ProgressBar, Row, Toast, ToastContainer } from "react-bootstrap"
 import 'react-circular-progressbar/dist/styles.css';
 import { Link, useParams } from "react-router-dom";
-import { useGroups } from '../context/Contexts';
 import { type Expense, type ExpenseSplit, type Group, type User } from "../types/model";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getTotalPaid } from "../types/expenseUtility";
+import { createEmptyExpense, createEmptyUser } from "../types/util";
+import { getGroupById } from "../data/groupRepository";
+import { groupJsonToGroup } from "../data/mapping";
+import { useAuth } from "../context/Contexts";
 
 function ManageGroup() {
-    /*
+    const {token, currentUser} = useAuth();
     const {groupId} = useParams<{groupId: string}>();
-    const {getGroupById, addPerson, removePerson, addExpense, removeExpense} = useGroups();
-    const group: Group | undefined = getGroupById(groupId || "");
+    const [group, setGroup] = useState<Group>();
+    const [loadingError, setLoadingError] = useState<string>();
 
     const [showAddPersonModal, setAddPersonModal] = useState<boolean>(false);
     const [newPersonName, setNewPersonName] = useState<string>('');
@@ -22,6 +25,25 @@ function ManageGroup() {
     const [inputError, setInputError] = useState<string | null>(null);
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastText, setToastText] = useState<string>('');
+
+    useEffect(() => {
+        if (!groupId) {
+            setLoadingError("Something went wrong loading this group");
+            return;
+        }
+
+        if (!token || !currentUser) {
+            setLoadingError("Please sign in");
+            return;
+        }
+
+        getGroupById(groupId)
+            .then(response => {
+                if (response.groups && response.groups.length > 0) {
+                    setGroup(groupJsonToGroup(response.groups[0]));
+                }
+            })
+    }, [groupId, currentUser, token])
 
     const toastMessage = (message: string) => {
         setToastText(message);
@@ -36,8 +58,8 @@ function ManageGroup() {
             return;
         }
 
-        const nameExists = group?.people.some(
-            (person) => person.name.trim().toLowerCase() === trimmedName.toLowerCase()
+        const nameExists = group?.members.some(
+            (person) => person.username.trim().toLowerCase() === trimmedName.toLowerCase()
         )
 
         if (nameExists) {
@@ -46,7 +68,7 @@ function ManageGroup() {
         }
 
         if (group) {
-            addPerson(group.id, {id: crypto.randomUUID(), name: newPersonName});
+            // TODO: call API and add person to group
             toastMessage(`${newPersonName.trim()} added to the group`);
         } else {
             toastMessage("Something went wrong");
@@ -58,11 +80,11 @@ function ManageGroup() {
 
     const handleAddExpense = () => {
         newExpense.id = crypto.randomUUID();
-        newExpense.splitBetween = newSplit;
+        newExpense.splits = newSplit;
         setNewExpense({...newExpense});
 
         if (group) {
-            addExpense(group.id, newExpense);
+            // TODO: call API to add expense
             toastMessage(`Expense '${newExpense.title.trim()}' added to the group`);
         } else {
             toastMessage("Something went wrong");
@@ -73,23 +95,23 @@ function ManageGroup() {
         setAddExpenseModal(false);
     }
 
-    const getPersonById = (id: string): User => {
-        const result = group?.people.find((person) => person.id == id);
-        return result ? result : createEmptyPerson();
+    const getMemberById = (id: string): User => {
+        const result = group?.members.find((user) => user.id == id);
+        return result ? result : createEmptyUser();
     }
 
-    const getSplitByPersonId = (id: string): ExpenseSplit | undefined => {
-        return newSplit.find((split) => split.personId == id);
+    const getSplitByUserId = (id: string): ExpenseSplit | undefined => {
+        return newSplit.find((split) => split.user.id == id);
     }
     
-    function handleRemovePerson(person: User): void {
+    function handleRemovePerson(user: User): void {
         if (!group) {
             toastMessage("Something went wrong");
             return;
         }
 
-        removePerson(group.id, person.id);
-        toastMessage(`${person.name} removed from the group`);
+        // TODO: call API to remove person from group
+        toastMessage(`${user.username} removed from the group`);
     }
 
     function handleRemoveExpense(expense: Expense): void {
@@ -98,8 +120,14 @@ function ManageGroup() {
             return;
         }
 
-        removeExpense(group.id, expense.id);
+        // TODO: call API to delete expense
         toastMessage(`Removed expense '${expense.title}'`);
+    }
+
+    if (loadingError) {
+        return (
+            <h3>{loadingError}</h3>
+        )
     }
 
     return (
@@ -117,17 +145,17 @@ function ManageGroup() {
                             <Col xs="auto"><Button variant="outline-secondary" onClick={() => setAddPersonModal(true)}>+</Button></Col>
                         </Row>
                         <ListGroup>
-                            {group.people.map((person, index) => (
+                            {group.members.map((user, index) => (
                                 <ListGroup.Item key={index}>
                                     <Row className="justify-content-between align-items-center">
                                         <Col>
-                                            {person.name}
+                                            {user.firstName} {user.lastName}
                                         </Col>
                                         <Col>
                                             <Button 
                                                 style={{float: 'right'}}
                                                 variant="outline-danger"
-                                                onClick={() => handleRemovePerson(person)}
+                                                onClick={() => handleRemovePerson(user)}
                                             >
                                                 Remove
                                             </Button>
@@ -177,7 +205,7 @@ function ManageGroup() {
             </>
             ) : <h1>Group not found</h1>}
 
-            {/* Add Person modal *//*}
+            {/* Add Person modal */}
             <Modal 
                 show={showAddPersonModal} 
                 onHide={() => setAddPersonModal(false)}
@@ -210,7 +238,7 @@ function ManageGroup() {
                 </Modal.Footer>
             </Modal>
 
-            {/* Add Expense modal *//*}
+            {/* Add Expense modal */}
             <Modal 
                 show={showAddExpenseModal} 
                 onHide={() => setAddExpenseModal(false)}
@@ -242,7 +270,7 @@ function ManageGroup() {
                                 <Form.Control
                                     type="date"
                                     value={new Date(newExpense.date).toISOString().slice(0, 10)}
-                                    onChange={(e) => setNewExpense({...newExpense, date: new Date(e.target.value).toISOString()})}
+                                    onChange={(e) => setNewExpense({...newExpense, date: new Date(e.target.value)})}
                                 />
                             </Col>
                             <Col>
@@ -261,49 +289,49 @@ function ManageGroup() {
                     <Form.Group controlId="addExpense.payerInfo">
                         <Form.Label className="mt-3">Who paid for this?</Form.Label>
                         <Form.Select
-                            value={newExpense.paidById}
-                            onChange={(e) => setNewExpense({...newExpense, paidById: e.target.value, payerPortionAmount: newExpense.totalCost, splitBetween: []})}
+                            value={newExpense.paidBy.id}
+                            onChange={(e) => setNewExpense({...newExpense, paidBy: getMemberById(e.target.value), payerPortion: newExpense.totalCost, splits: []})}
                         >
                             <option value=''>Select...</option>
-                            {group?.people.map((person, index) => (
-                                <option key={index} value={person.id}>{person.name}</option>
+                            {group?.members.map((user, index) => (
+                                <option key={index} value={user.id}>{user.firstName} {user.lastName}</option>
                             ))}
                         </Form.Select>
                     </Form.Group>
-                    {newExpense.paidById ? (
+                    {newExpense.paidBy ? (
                         <Form.Group controlId="addExpense.splitInfo">
                             <Form.Label className="mt-3">How much does everyone owe?</Form.Label>
                             <Row className="align-items-center mt-2">
-                                <Col><Form.Label>{getPersonById(newExpense.paidById).name}</Form.Label></Col>
+                                <Col><Form.Label>{getMemberById(newExpense.paidBy.id).firstName}</Form.Label></Col>
                                 <Col>
                                     <Form.Control 
                                         type="number"
                                         placeholder="$"
                                         step="0.01"
                                         min="0"
-                                        value={newExpense.payerPortionAmount}
-                                        onChange={(e) => setNewExpense({...newExpense, payerPortionAmount: parseFloat(e.target.value)})}
+                                        value={newExpense.payerPortion}
+                                        onChange={(e) => setNewExpense({...newExpense, payerPortion: parseFloat(e.target.value)})}
                                     />
                                 </Col>
                             </Row>
-                            {group?.people.map((person) => {
-                                const mySplit = getSplitByPersonId(person.id);
+                            {group?.members.map((user) => {
+                                const mySplit = getSplitByUserId(user.id);
                                 console.log("mySplit =", mySplit);
                                 return (
-                                    person.id != newExpense.paidById ? (
+                                    user.id != newExpense.paidBy.id ? (
                                     <Row className="align-items-center mt-2">
                                         <Col className="d-flex">
                                             <Form.Check
                                                 checked={mySplit ? true : false}
                                                 onChange={(e) => {
                                                     if (e.target.checked) {
-                                                        setNewSplit([...newSplit, {personId: person.id, amountOwed: 0, amountPaid: 0}])
+                                                        setNewSplit([...newSplit, {user: user, amountOwed: 0, amountPaid: 0}])
                                                     } else {
-                                                        setNewSplit(newSplit.filter((split) => split.personId != person.id))
+                                                        setNewSplit(newSplit.filter((split) => split.user.id != user.id))
                                                     }
                                                 }}
                                             />
-                                            <Form.Label className="ms-2">{getPersonById(person.id).name}</Form.Label>
+                                            <Form.Label className="ms-2">{getMemberById(user.id).firstName} </Form.Label>
                                         </Col>
                                         <Col>
                                             <Form.Control 
@@ -336,7 +364,7 @@ function ManageGroup() {
                 </Modal.Footer>
             </Modal>
 
-            {/* Toast messages *//*}
+            {/* Toast messages */}
             <ToastContainer className="p-1 m-1" position="bottom-start" style={{zIndex: 1}}>
                 <Toast show={showToast} onClose={() => setShowToast(false)}>
                     <Toast.Header className="ps-0" closeButton/>
@@ -344,9 +372,7 @@ function ManageGroup() {
                 </Toast>
             </ToastContainer>
         </Container>
-    )
-    */
-   return (<></>);
+    );
 }
 
 export default ManageGroup

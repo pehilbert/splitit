@@ -78,10 +78,23 @@ export async function getGroupById(id: string): Promise<GetGroupResponse> {
     }
 }
 
+export async function getGroupsForUser(id: string): Promise<GetGroupResponse> {
+    try {
+        const response = await axiosInstance.get<GetGroupResponse>(`/groups/?user_id=${id}`);
+        return response.data;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            return error.response?.data ?? { message: "Something went wrong." };
+        }
+
+        return { message: "Something went wrong." };
+    }
+}
+
 export async function createGroup(request: CreateGroupRequest, token: string): Promise<CreateGroupResponse> {
     try {
         const response = await axiosInstance.post<CreateGroupResponse>(
-            `/groups`,
+            `/groups/`,
             request,
             {
                 headers: {

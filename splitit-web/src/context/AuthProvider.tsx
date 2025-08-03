@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { AuthContext, type AuthContextType } from "./Contexts";
 import type { User } from "../types/model";
-import { authenticateUser, type UserJson } from "../data/userRepository";
+import { authenticateUser } from "../data/userRepository";
+import { userJsonToUser } from "../data/mapping";
 
 interface AuthProviderProps {
     children: React.ReactNode;
@@ -40,13 +41,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             {children}
         </AuthContext.Provider>
     );
-}
-
-function userJsonToUser(json: UserJson): User {
-    return {
-        id: json.id.toString(),
-        username: json.username,
-        firstName: json.first_name,
-        lastName: json.last_name
-    }
 }

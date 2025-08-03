@@ -1,19 +1,35 @@
 import { Breadcrumb, Button, Container, Form, ListGroup, Modal } from "react-bootstrap";
 import GroupListItem from "../components/GroupListItem";
-import { useGroups, useAuth } from '../context/Contexts';
-import { useState } from "react";
+import { useAuth } from '../context/Contexts';
+import { useEffect, useState, useCallback } from "react";
 import { type Group } from "../types/model";
+import { createEmptyGroup } from "../types/util";
+import { createGroup, getGroupsForUser } from "../data/groupRepository";
+import { groupJsonToGroup } from "../data/mapping";
 
 function Groups() {
-    /*
-    const { groups, addGroup } = useGroups();
-    const { currentUser } = useAuth();
+    const { currentUser, token } = useAuth();
 
+    const [groups, setGroups] = useState<Group[]>([]);
     const [showAddGroupModal, setShowAddGroupModal] = useState<boolean>(false);
-    const [newGroup, setNewGroup] = useState<Group>();
+    const [newGroup, setNewGroup] = useState<Group>(createEmptyGroup());
     const [inputError, setInputError] = useState<string | null>(null);
-    
-    function handleAddGroup() {
+
+    const updateGroups = useCallback(async () => {
+        if (!currentUser) return;
+        const response = await getGroupsForUser(currentUser.id);
+        if (response.groups) {
+            setGroups(response.groups.map(json => groupJsonToGroup(json)));
+        } else {
+            console.error("Error fetching groups", response);
+        }
+    }, [currentUser]);
+
+    useEffect(() => {
+        updateGroups();
+    }, [updateGroups]);
+
+    async function handleAddGroup() {
         const trimmedName = newGroup.name.trim();
 
         if (trimmedName === '') {
@@ -26,19 +42,25 @@ function Groups() {
         )
 
         if (nameExists) {
-            setInputError("There is already a group with that name");
+            setInputError("You are already in a group with that name");
             return;
         }
 
-        if (currentUser) {
-            newGroup.people.push(currentUser);
+        if (!currentUser || !token) {
+            setInputError("Please sign in to create a group");
+            return;
+        }
+
+        const createGroupResponse = await createGroup({name: newGroup.name}, token);
+
+        if (createGroupResponse.group) {
             setNewGroup(createEmptyGroup());
-            addGroup(newGroup);
+            updateGroups();
+            setShowAddGroupModal(false);
         } else {
-            return;
+            console.error("Error creating group", createGroupResponse);
+            setInputError(createGroupResponse.message || '');
         }
-
-        setShowAddGroupModal(false);
     }
 
     if (!currentUser) {
@@ -56,12 +78,12 @@ function Groups() {
             </Breadcrumb>
             <ListGroup>
                 {groups.map((group, index) => (
-                    <ListGroup.Item as={GroupListItem} key={index} group={group} />
+                    <ListGroup.Item as={GroupListItem} key={index} group={group} updateGroupsCallback={updateGroups}/>
                 ))}
             </ListGroup>
             <Button className='mt-2' onClick={() => setShowAddGroupModal(true)}>Add Group</Button>
 
-            {/* Add Group Modal *//*}
+            {/* Add Group Modal */}
             
             <Modal 
                 show={showAddGroupModal} 
@@ -93,7 +115,6 @@ function Groups() {
             </Modal>
         </Container>
     )
-    */
    return (<></>);
 }
 
