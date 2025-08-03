@@ -1,44 +1,102 @@
 import { Breadcrumb, Card, Col, Container, FormControl, ListGroup, ProgressBar, Row } from "react-bootstrap"
-import { useGroups } from '../context/Contexts';
+import { useAuth } from '../context/Contexts';
 import { useParams } from "react-router-dom"
-import { type Expense, type Group, type User } from "../types/model"
-import { useState } from "react";
+import { type Expense, type Group } from "../types/model"
+import { useCallback, useEffect, useState } from "react";
 import { getTotalPaid } from "../types/expenseUtility";
+import { getGroupById } from "../data/groupRepository";
+import { expenseJsonToExpense, groupJsonToGroup } from "../data/mapping";
+import { updateExpense, type UpdateExpenseRequest } from "../data/expenseRepository";
 
 function ManageExpense() {
-    /*
+    const {token, currentUser} = useAuth();
     const [currentlyEditingSplit, setCurrentlyEditingSplit] = useState<string>('');
     const [currentlyEditingSplitAmount, setCurrentlyEditingSplitAmount] = useState<number>(0);
 
     const {groupId, expenseId} = useParams<{groupId: string, expenseId: string}>();
-    const {getGroupById, updateGroup} = useGroups();
 
-    const group: Group | undefined = getGroupById(groupId || "");
-    const expense: Expense | undefined = group?.expenses.find((expense) => expense.id == expenseId);
+    const [group, setGroup] = useState<Group>();
+    const [expense, setExpense] = useState<Expense>();
+    const [loadingError, setLoadingError] = useState<string | null>(null);
 
-    function getPersonById(personId: string): User {
-        const person = group?.people.find((person) => person.id == personId);
+    const updateGroup = useCallback (async () => {
+        if (!groupId) {
+            setLoadingError("Something went wrong");
+            return;
+        }
 
-        return person ? person : {id: "", name: ""};
+        const response = await getGroupById(groupId);
+
+        if (!response.groups) {
+            console.error(response);
+            setLoadingError(response.message || "Something went wrong");
+            return;
+        }
+
+        if (response.groups.length === 0) {
+            setLoadingError("Group not found");
+            return;
+        }
+
+        const group = response.groups[0];
+        const expense = group.expenses.find(expense => expense.id.toString() === expenseId)
+        if (!expense) {
+            setLoadingError("Expense not found");
+            return;
+        }
+
+        setGroup(groupJsonToGroup(group));
+        setExpense(expenseJsonToExpense(expense));
+    }, [groupId, expenseId]);
+
+    useEffect(() => {
+        updateGroup()
+    }, [groupId, expenseId, updateGroup]);
+
+    async function handleChangeEditingSplit(userId: string) {
+        if (!expense) {
+            console.error("Failed to update expense: expense does not exist");
+            return;
+        }
+
+        if (!token) {
+            console.error("Not signed in");
+            return;
+        }
+
+        if (currentlyEditingSplit) {
+            const request: UpdateExpenseRequest = {
+                splits: [
+                    {
+                        user_id: parseInt(currentlyEditingSplit), 
+                        amount_paid: currentlyEditingSplitAmount
+                    }
+                ]
+            }
+
+            const response = await updateExpense(expense.id, request, token);
+
+            if (!response.expense) {
+                console.error("Could not update expense", response);
+            }
+
+            updateGroup();
+        }
+
+        setCurrentlyEditingSplit(userId);
+        setCurrentlyEditingSplitAmount(0);
     }
 
-    function handleChangeEditingSplit(personId: string) {
-        const prevSplit = expense?.splitBetween.find(split => split.personId === currentlyEditingSplit);
+    if (loadingError) {
+        return (
+            <h3>{loadingError}</h3>
+        )
+    }
 
-        if (prevSplit) {
-            prevSplit.amountPaid = Math.min(currentlyEditingSplitAmount, prevSplit.amountOwed);
-            updateGroup(group!);
-        }
-
-        const currentSplit = expense?.splitBetween.find(split => split.personId === personId);
-
-        if (currentSplit) {
-            setCurrentlyEditingSplit(personId);
-            setCurrentlyEditingSplitAmount(currentSplit.amountPaid);
-        } else {
-            setCurrentlyEditingSplit('');
-            setCurrentlyEditingSplitAmount(0);
-        }
+    if (!token || !currentUser) {
+        return (
+            <h3>Please sign in</h3>
+        )
     }
 
     return (
@@ -67,7 +125,7 @@ function ManageExpense() {
                             </Row>
                             <Row>
                                 <Col className="px-3">
-                                    <p>Paid by: {getPersonById(expense.paidById).name}</p>
+                                    <p>Paid by: {expense.paidBy.firstName} {expense.paidBy.lastName}</p>
                                 </Col>
                             </Row>
                             <Row>
@@ -87,17 +145,15 @@ function ManageExpense() {
                         </Container>
                         <ListGroup>
                             <ListGroup.Item className="d-flex justify-content-between p-2">
-                                <p>{getPersonById(expense.paidById).name}</p>
-                                <p>${expense.payerPortionAmount.toFixed(2)}</p>
+                                <p>{expense.paidBy.firstName}</p>
+                                <p>${expense.payerPortion.toFixed(2)}</p>
                             </ListGroup.Item>
-                            {expense.splitBetween.map((split, index) => {
-                                const person = getPersonById(split.personId);
-
+                            {expense.splits.map((split, index) => {
                                 return (
                                     <ListGroup.Item className="d-flex justify-content-between p-2" key={index}>
-                                        <p>{person.name}</p>
+                                        <p>{split.user.firstName} {split.user.lastName}</p>
                                         <div style={{width: '25%'}}>
-                                            {currentlyEditingSplit === split.personId ?
+                                            {currentlyEditingSplit === split.user.id ?
                                             <>
                                                 <FormControl
                                                     type="number"
@@ -114,7 +170,7 @@ function ManageExpense() {
                                             <>
                                                 <p 
                                                     style={{textAlign: 'right'}} 
-                                                    onClick={() => handleChangeEditingSplit(split.personId)}
+                                                    onClick={() => handleChangeEditingSplit(split.user.id)}
                                                 >
                                                     ${split.amountPaid.toFixed(2)} / ${split.amountOwed.toFixed(2)}
                                                 </p>
@@ -133,9 +189,7 @@ function ManageExpense() {
             </>
             ) : <h1>Expense not found</h1>}
         </Container>
-    )
-        */
-    return (<></>);
+    );
 }
 
 export default ManageExpense

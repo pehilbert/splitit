@@ -9,6 +9,7 @@ import { addGroupMember, getGroupById, removeGroupMember } from "../data/groupRe
 import { groupJsonToGroup, userJsonToUser } from "../data/mapping";
 import { useAuth } from "../context/Contexts";
 import { searchByUsername } from "../data/userRepository";
+import { createExpenseForGroup, type NewExpenseSplit, type CreateExpenseRequest } from "../data/expenseRepository";
 
 function ManageGroup() {
     const {token, currentUser} = useAuth();
@@ -26,6 +27,7 @@ function ManageGroup() {
     const [newSplit, setNewSplit] = useState<ExpenseSplit[]>([]);
 
     const [inputError, setInputError] = useState<string | null>(null);
+    const [expenseInputError, setExpenseInputError] = useState<string | null>(null);
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastText, setToastText] = useState<string>('');
 
@@ -118,18 +120,37 @@ function ManageGroup() {
         setUserSearchResults([]);
     }
 
-    const handleAddExpense = () => {
-        newExpense.id = crypto.randomUUID();
-        newExpense.splits = newSplit;
-        setNewExpense({...newExpense});
-
-        if (group) {
-            // TODO: call API to add expense
-            toastMessage(`Expense '${newExpense.title.trim()}' added to the group`);
-        } else {
-            toastMessage("Something went wrong");
+    const handleAddExpense = async () => {
+        if (!group) {
+            setExpenseInputError("Something went wrong");
+            return;
         }
 
+        if (!token) {
+            setExpenseInputError("Please sign in");
+            return;
+        }
+
+        const request: CreateExpenseRequest = {
+            title: newExpense.title,
+            description: newExpense.description,
+            date: ((d: Date) => {
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            })(newExpense.date),
+            total_cost: newExpense.totalCost,
+            payer_portion: newExpense.payerPortion,
+            splits: newSplit.map<NewExpenseSplit>(split => ({user_id: parseInt(split.user.id), amount_paid: split.amountPaid, amount_owed: split.amountOwed}))
+        }
+        const response = await createExpenseForGroup(group.id, request, token);
+
+        if (response.message) {
+            toastMessage(response.message);
+        }
+
+        updateGroup();
         setNewExpense(createEmptyExpense());
         setNewSplit([]);
         setAddExpenseModal(false);
@@ -172,6 +193,12 @@ function ManageGroup() {
 
         // TODO: call API to delete expense
         toastMessage(`Removed expense '${expense.title}'`);
+    }
+
+    if (!token || !currentUser) {
+        return (
+            <h3>Please sign in</h3>
+        )
     }
 
     if (loadingError) {
@@ -314,6 +341,9 @@ function ManageGroup() {
                     <Modal.Title>Add Expense to Group "{group?.name}"</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    <Form.Control.Feedback type="invalid">
+                        {expenseInputError}
+                    </Form.Control.Feedback>
                     <Form.Group controlId="addExpense.basicInfo">
                         <Form.Label>Title</Form.Label>
                         <Form.Control 
@@ -351,76 +381,61 @@ function ManageGroup() {
                             </Col>
                         </Row>
                     </Form.Group>
-                    <Form.Group controlId="addExpense.payerInfo">
-                        <Form.Label className="mt-3">Who paid for this?</Form.Label>
-                        <Form.Select
-                            value={newExpense.paidBy.id}
-                            onChange={(e) => setNewExpense({...newExpense, paidBy: getMemberById(e.target.value), payerPortion: newExpense.totalCost, splits: []})}
-                        >
-                            <option value=''>Select...</option>
-                            {group?.members.map((user, index) => (
-                                <option key={index} value={user.id}>{user.firstName} {user.lastName}</option>
-                            ))}
-                        </Form.Select>
+                    <Form.Group controlId="addExpense.splitInfo">
+                        <Form.Label className="mt-3">How much does everyone owe?</Form.Label>
+                        <Row className="align-items-center mt-2">
+                            <Col><Form.Label>{currentUser.firstName} (you)</Form.Label></Col>
+                            <Col>
+                                <Form.Control 
+                                    type="number"
+                                    placeholder="$"
+                                    step="0.01"
+                                    min="0"
+                                    value={newExpense.payerPortion}
+                                    onChange={(e) => setNewExpense({...newExpense, payerPortion: parseFloat(e.target.value)})}
+                                />
+                            </Col>
+                        </Row>
+                        {group?.members.map((user) => {
+                            const mySplit = getSplitByUserId(user.id);
+                            return (
+                                user.id != currentUser.id ? (
+                                <Row className="align-items-center mt-2">
+                                    <Col className="d-flex">
+                                        <Form.Check
+                                            checked={mySplit ? true : false}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setNewSplit([...newSplit, {user: user, amountOwed: 0, amountPaid: 0}])
+                                                } else {
+                                                    setNewSplit(newSplit.filter((split) => split.user.id != user.id))
+                                                }
+                                            }}
+                                        />
+                                        <Form.Label className="ms-2">{getMemberById(user.id).firstName} </Form.Label>
+                                    </Col>
+                                    <Col>
+                                        <Form.Control 
+                                            type="number"
+                                            placeholder="$"
+                                            step="0.01"
+                                            min="0"
+                                            readOnly={mySplit ? false : true}
+                                            value={mySplit?.amountOwed ?? ''}
+                                            onChange={(e) => {
+                                                if (mySplit) {
+                                                    console.log(e.target.value)
+                                                    mySplit.amountPaid = 0;
+                                                    mySplit.amountOwed = parseFloat(e.target.value);
+                                                    setNewSplit([...newSplit]);
+                                                }
+                                            }}
+                                        />
+                                    </Col>
+                                </Row>
+                            ) : <></>
+                        )})}
                     </Form.Group>
-                    {newExpense.paidBy ? (
-                        <Form.Group controlId="addExpense.splitInfo">
-                            <Form.Label className="mt-3">How much does everyone owe?</Form.Label>
-                            <Row className="align-items-center mt-2">
-                                <Col><Form.Label>{getMemberById(newExpense.paidBy.id).firstName}</Form.Label></Col>
-                                <Col>
-                                    <Form.Control 
-                                        type="number"
-                                        placeholder="$"
-                                        step="0.01"
-                                        min="0"
-                                        value={newExpense.payerPortion}
-                                        onChange={(e) => setNewExpense({...newExpense, payerPortion: parseFloat(e.target.value)})}
-                                    />
-                                </Col>
-                            </Row>
-                            {group?.members.map((user) => {
-                                const mySplit = getSplitByUserId(user.id);
-                                return (
-                                    user.id != newExpense.paidBy.id ? (
-                                    <Row className="align-items-center mt-2">
-                                        <Col className="d-flex">
-                                            <Form.Check
-                                                checked={mySplit ? true : false}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setNewSplit([...newSplit, {user: user, amountOwed: 0, amountPaid: 0}])
-                                                    } else {
-                                                        setNewSplit(newSplit.filter((split) => split.user.id != user.id))
-                                                    }
-                                                }}
-                                            />
-                                            <Form.Label className="ms-2">{getMemberById(user.id).firstName} </Form.Label>
-                                        </Col>
-                                        <Col>
-                                            <Form.Control 
-                                                type="number"
-                                                placeholder="$"
-                                                step="0.01"
-                                                min="0"
-                                                readOnly={mySplit ? false : true}
-                                                value={mySplit?.amountOwed}
-                                                onChange={(e) => {
-                                                    console.log("changed")
-                                                    if (mySplit) {
-                                                        console.log(e.target.value)
-                                                        mySplit.amountPaid = 0;
-                                                        mySplit.amountOwed = parseFloat(e.target.value);
-                                                        setNewSplit([...newSplit]);
-                                                    }
-                                                }}
-                                            />
-                                        </Col>
-                                    </Row>
-                                ) : <></>
-                            )})}
-                        </Form.Group>
-                    ) : <></>}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setAddExpenseModal(false)}>Cancel</Button>

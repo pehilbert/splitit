@@ -67,8 +67,8 @@ export type UpdateExpenseRequest = {
 
 export type ExpenseSplitUpdate = {
     user_id: number
-    amount_paid: number
-    amount_owed: number
+    amount_paid?: number
+    amount_owed?: number
 }
 
 export type UpdateExpenseResponse = {
