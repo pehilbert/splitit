@@ -9,7 +9,7 @@ import { addGroupMember, getGroupById, removeGroupMember } from "../data/groupRe
 import { groupJsonToGroup, userJsonToUser } from "../data/mapping";
 import { useAuth } from "../context/Contexts";
 import { searchByUsername } from "../data/userRepository";
-import { createExpenseForGroup, type NewExpenseSplit, type CreateExpenseRequest } from "../data/expenseRepository";
+import { createExpenseForGroup, type NewExpenseSplit, type CreateExpenseRequest, deleteExpense } from "../data/expenseRepository";
 
 function ManageGroup() {
     const {token, currentUser} = useAuth();
@@ -185,14 +185,24 @@ function ManageGroup() {
         updateGroup();
     }
 
-    function handleRemoveExpense(expense: Expense): void {
+    async function handleRemoveExpense(expense: Expense) {
         if (!group) {
             toastMessage("Something went wrong");
             return;
         }
 
-        // TODO: call API to delete expense
-        toastMessage(`Removed expense '${expense.title}'`);
+        if (!token) {
+            toastMessage("Please sign in");
+            return;
+        }
+
+        const response = await deleteExpense(expense.id, token);
+
+        if (response.message) {
+            toastMessage(response.message);
+        }
+
+        updateGroup();
     }
 
     if (!token || !currentUser) {
@@ -212,8 +222,12 @@ function ManageGroup() {
             {group ? (
             <>
                 <Breadcrumb>
-                    <Breadcrumb.Item href="/groups">Groups</Breadcrumb.Item>
-                    <Breadcrumb.Item active>{group.name}</Breadcrumb.Item>
+                    <li className="breadcrumb-item">
+                        <Link to="/groups">Groups</Link>
+                    </li>
+                    <li className="breadcrumb-item active" aria-current="page">
+                        {group.name}
+                    </li>
                 </Breadcrumb>
                 <Row>
                     <Col>

@@ -83,7 +83,7 @@ export async function searchByUsername(username: string, limit: number = 5): Pro
 export async function createNewUser(request: CreateUserRequest): Promise<CreateUserResponse> {
     try {
         const response = await axiosInstance.post<CreateUserResponse>(
-            "/users",
+            "/users/",
             request,
             { headers: { "Content-Type": "application/json" } }
         );

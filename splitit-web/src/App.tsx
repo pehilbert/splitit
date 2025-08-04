@@ -7,6 +7,7 @@ import Groups from './pages/Groups'
 import ManageGroup from './pages/ManageGroup'
 import ManageExpense from './pages/ManageExpense'
 import SignIn from './pages/SignIn'
+import SignUp from './pages/SignUp'
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
                 <Route path="/groups/:groupId" element={<ManageGroup />} />
                 <Route path="/groups/:groupId/:expenseId" element={<ManageExpense />} />
                 <Route path="/signin" element={<SignIn />} />
+                <Route path="/signup" element={<SignUp />} />
             </Routes>
         </>
     )

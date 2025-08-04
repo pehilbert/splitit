@@ -1,4 +1,5 @@
 import { Breadcrumb, Card, Col, Container, FormControl, ListGroup, ProgressBar, Row } from "react-bootstrap"
+import { Link } from "react-router-dom";
 import { useAuth } from '../context/Contexts';
 import { useParams } from "react-router-dom"
 import { type Expense, type Group } from "../types/model"
@@ -84,7 +85,7 @@ function ManageExpense() {
         }
 
         setCurrentlyEditingSplit(userId);
-        setCurrentlyEditingSplitAmount(0);
+        setCurrentlyEditingSplitAmount(userId ? expense.splits.find(split => split.user.id === userId)?.amountOwed || 0 : 0);
     }
 
     if (loadingError) {
@@ -104,9 +105,15 @@ function ManageExpense() {
             {group && expense ? (
             <>
                 <Breadcrumb>
-                    <Breadcrumb.Item href="/groups">Groups</Breadcrumb.Item>
-                    <Breadcrumb.Item href={`/groups/${groupId}`}>{group.name}</Breadcrumb.Item>
-                    <Breadcrumb.Item active>{expense.title}</Breadcrumb.Item>
+                    <li className="breadcrumb-item">
+                        <Link to="/groups">Groups</Link>
+                    </li>
+                    <li className="breadcrumb-item">
+                        <Link to={`/groups/${group.id}`}>{group.name}</Link>
+                    </li>
+                    <li className="breadcrumb-item active" aria-current="page">
+                        {expense.title}
+                    </li>
                 </Breadcrumb>
                 <Row>
                     <Col className="p-2 w-25">
@@ -145,10 +152,10 @@ function ManageExpense() {
                         </Container>
                         <ListGroup>
                             <ListGroup.Item className="d-flex justify-content-between p-2">
-                                <p>{expense.paidBy.firstName}</p>
+                                <p>{expense.paidBy.firstName} {expense.paidBy.lastName} (Creator)</p>
                                 <p>${expense.payerPortion.toFixed(2)}</p>
                             </ListGroup.Item>
-                            {expense.splits.map((split, index) => {
+                            {expense.splits.sort((a, b) => parseInt(a.user.id) - parseInt(b.user.id)).map((split, index) => {
                                 return (
                                     <ListGroup.Item className="d-flex justify-content-between p-2" key={index}>
                                         <p>{split.user.firstName} {split.user.lastName}</p>

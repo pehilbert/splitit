@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Container, Form } from "react-bootstrap";
 import { useAuth } from "../context/Contexts";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 function SignIn() {
     const {authenticate} = useAuth();
@@ -60,6 +60,9 @@ function SignIn() {
                 >
                     Sign In
                 </Button>
+                <div className="text-center mt-3">
+                    <p>Don't have an account? <Link to="/signup">Sign up</Link></p>
+                </div>
             </Form>
         </Container>
     )
